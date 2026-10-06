@@ -2,46 +2,42 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cors = require('cors');
-const fs = require('fs');
+const { v2: cloudinary } = require('cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config();
 
 const app = express();
-
-// 1. Auto-create uploads folder so Render doesn't crash on images
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
-
-// 2. Security and Middlewares (This is what got deleted!)
 app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
 
-// 3. Multer (File Upload) Setup
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'zenith_chads',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm'],
+        resource_type: 'auto'
+    }
 });
 const upload = multer({ storage });
 
-// 4. Database Schema
 const postSchema = new mongoose.Schema({
     content: { type: String, required: true },
     mediaUrl: { type: String, default: null },
     mediaType: { type: String, enum: ['image', 'video', 'audio', null], default: null },
     likes: { type: Number, default: 0 },
-    comments: [{ 
-        text: String, 
-        createdAt: { type: Date, default: Date.now } 
-    }],
+    comments: [{ text: String, createdAt: { type: Date, default: Date.now } }],
     ipAddress: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 });
-
 const Post = mongoose.model('Post', postSchema);
 
-// --- PUBLIC ROUTES ---
 app.get('/api/posts', async (req, res) => {
     try {
         const posts = await Post.find().select('-ipAddress').sort({ createdAt: -1 });
@@ -61,7 +57,7 @@ app.post('/api/posts', upload.single('media'), async (req, res) => {
         const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const newPost = new Post({
             content: req.body.content,
-            mediaUrl: req.file ? `/uploads/${req.file.filename}` : null,
+            mediaUrl: req.file ? req.file.path : null,
             mediaType: req.body.mediaType || null,
             ipAddress: userIp
         });
@@ -79,43 +75,31 @@ app.post('/api/posts/:id/like', async (req, res) => {
 
 app.post('/api/posts/:id/comment', async (req, res) => {
     try {
-        await Post.findByIdAndUpdate(req.params.id, { 
-            $push: { comments: { text: req.body.text } } 
-        });
+        await Post.findByIdAndUpdate(req.params.id, { $push: { comments: { text: req.body.text } } });
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: 'Failed to comment' }); }
 });
 
-// --- ADMIN ROUTES ---
 app.get('/api/admin/posts', async (req, res) => {
-    const adminToken = req.headers['x-admin-token'];
-    if (adminToken !== process.env.ADMIN_SECRET) {
-        return res.status(403).json({ error: 'Unauthorized.' });
-    }
+    if (req.headers['x-admin-token'] !== process.env.ADMIN_SECRET) return res.status(403).json({ error: 'Unauthorized.' });
     try {
         const posts = await Post.find().sort({ createdAt: -1 });
         res.json(posts);
-    } catch (err) { res.status(500).json({ error: 'Failed to fetch admin feed' }); }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 });
 
 app.delete('/api/admin/posts/:id', async (req, res) => {
-    const adminToken = req.headers['x-admin-token'];
-    if (adminToken !== process.env.ADMIN_SECRET) {
-        return res.status(403).json({ error: 'Unauthorized.' });
-    }
+    if (req.headers['x-admin-token'] !== process.env.ADMIN_SECRET) return res.status(403).json({ error: 'Unauthorized.' });
     try {
         await Post.findByIdAndDelete(req.params.id);
         res.json({ message: 'Post erased.' });
-    } catch (err) { res.status(500).json({ error: 'Failed to delete' }); }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 });
 
-// --- DATABASE CONNECTION ---
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
-
-mongoose.connect(MONGO_URI)
+mongoose.connect(process.env.MONGO_URI)
     .then(() => {
-        console.log('Connected to the Database.');
+        console.log('Connected to Database.');
         app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     })
-    .catch(err => console.error('Database connection failed:', err));
+    .catch(err => console.error(err));

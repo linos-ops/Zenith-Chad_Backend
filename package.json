@@ -10,10 +10,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
     "mongoose": "^9.11.0",
-    "multer": "^2.4.0"
+    "multer": "^2.4.0",
+    "multer-storage-cloudinary": "^4.0.0"
   }
 }
