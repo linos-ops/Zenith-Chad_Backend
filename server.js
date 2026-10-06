@@ -28,7 +28,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 const postSchema = new mongoose.Schema({
-    content: { type: String, required: true },
+    content: { type: String, required:'' },
     mediaUrl: { type: String, default: null },
     mediaType: { type: String, enum: ['image', 'video', 'audio', null], default: null },
     likes: { type: Number, default: 0 },
@@ -54,6 +54,10 @@ app.get('/api/posts/trending', async (req, res) => {
 
 app.post('/api/posts', upload.single('media'), async (req, res) => {
     try {
+        if (!req.body.content && !req.file) {
+            return res.status(400).json({ error: 'You must provide text or a file.' });
+        }
+
         const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const newPost = new Post({
             content: req.body.content,
@@ -63,7 +67,9 @@ app.post('/api/posts', upload.single('media'), async (req, res) => {
         });
         await newPost.save();
         res.status(201).json({ message: 'Dropped successfully' });
-    } catch (err) { res.status(500).json({ error: 'Failed' }); }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed' });
+    }
 });
 
 app.post('/api/posts/:id/like', async (req, res) => {

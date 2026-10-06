@@ -61,7 +61,7 @@
                     
                     let mediaHtml = '';
                     if (post.mediaUrl) {
-                        const url = `http://localhost:5000${post.mediaUrl}`;
+                        const url = post.mediaUrl.startsWith('http') ? post.mediaUrl : `https://zenith-chad-backend.onrender.com${post.mediaUrl}`;
                         if (post.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) mediaHtml = `<img src="${url}">`;
                         else if (post.mediaUrl.match(/\.(mp4|webm)$/i)) mediaHtml = `<video controls src="${url}"></video>`;
                     }
