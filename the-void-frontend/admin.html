@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Chads - ADMIN OVERRIDE</title>
+    <style>
+        body { background: #050000; color: #ff4444; font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { border-bottom: 2px solid #ff4444; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .auth-box { background: #110000; border: 1px solid #ff4444; padding: 20px; margin-bottom: 20px; display: flex; gap: 10px; }
+        input[type="password"] { background: #000; border: 1px solid #ff4444; color: #fff; padding: 10px; flex: 1; outline: none; font-family: inherit; }
+        button { background: #ff4444; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-family: inherit; }
+        button:hover { background: #fff; }
+
+        .admin-post { background: #110000; border: 1px solid #330000; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .admin-meta { font-size: 12px; color: #888; margin-bottom: 10px; display: flex; gap: 15px; }
+        .ip-badge { background: #ff4444; color: #000; padding: 2px 6px; font-weight: bold; border-radius: 3px; }
+        .content { color: #ccc; margin-bottom: 10px; word-wrap: break-word; }
+        img, video { max-width: 200px; border: 1px solid #330000; }
+        
+        .btn-delete { background: transparent; border: 1px solid #ff4444; color: #ff4444; }
+        .btn-delete:hover { background: #ff4444; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Override Panel</h1>
+        
+        <div class="auth-box">
+            <input type="password" id="adminSecret" placeholder="Enter Admin Secret...">
+            <button onclick="loadAdminFeed()">Authorize</button>
+        </div>
+
+        <div id="adminFeed"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/admin/posts';
+        let secretToken = '';
+
+        async function loadAdminFeed() {
+            secretToken = document.getElementById('adminSecret').value;
+            if (!secretToken) return alert("Enter password.");
+
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { 'x-admin-token': secretToken }
+                });
+                
+                if (res.status === 403) return alert("ACCESS DENIED. Invalid password.");
+                
+                const posts = await res.json();
+                const feed = document.getElementById('adminFeed');
+                feed.innerHTML = `<h3 style="color: #fff;">System Authorized. ${posts.length} entries found.</h3>`;
+
+                posts.forEach(post => {
+                    const postEl = document.createElement('div');
+                    postEl.className = 'admin-post';
+                    
+                    let mediaHtml = '';
+                    if (post.mediaUrl) {
+                        const url = `http://localhost:5000${post.mediaUrl}`;
+                        if (post.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) mediaHtml = `<img src="${url}">`;
+                        else if (post.mediaUrl.match(/\.(mp4|webm)$/i)) mediaHtml = `<video controls src="${url}"></video>`;
+                    }
+
+                    postEl.innerHTML = `
+                        <div style="flex: 1; padding-right: 20px;">
+                            <div class="admin-meta">
+                                <span>ID: ${post._id}</span>
+                                <span class="ip-badge">IP: ${post.ipAddress || 'Unknown'}</span>
+                                <span>Likes: ${post.likes}</span>
+                            </div>
+                            <div class="content">${post.content}</div>
+                            ${mediaHtml}
+                        </div>
+                        <button class="btn-delete" onclick="deletePost('${post._id}')">DELETE POST</button>
+                    `;
+                    feed.appendChild(postEl);
+                });
+            } catch (err) { alert("Server error."); }
+        }
+
+        async function deletePost(id) {
+            if (!confirm("Permanently delete this post?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-admin-token': secretToken }
+                });
+                
+                if (res.ok) {
+                    loadAdminFeed(); // Reload list after deletion
+                } else {
+                    alert("Failed to delete.");
+                }
+            } catch (err) { alert("Error deleting post."); }
+        }
+    </script>
+</body>
+</html>
