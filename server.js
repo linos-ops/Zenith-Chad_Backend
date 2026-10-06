@@ -2,11 +2,17 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cors = require('cors');
+const fs = require('fs'); // Added file system module
 require('dotenv').config();
 
 const app = express();
+
+// Automatically build the uploads folder if it is missing
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads');
+}
+
 app.set('trust proxy', true);
-app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
