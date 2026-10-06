@@ -75,10 +75,25 @@
             .post { padding: 15px; gap: 10px; }
             .avatar { width: 35px; height: 35px; }
             .interact-btn svg { width: 18px; height: 18px; }
+        /* Registration Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-box { background: #15151e; padding: 30px; border-radius: 20px; border: 1px solid #2a2a35; text-align: center; width: 90%; max-width: 400px; }
+.modal-box input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 1px solid #555; background: #0d0d12; color: white; }
+.modal-box button { background: #fff; color: #000; padding: 12px 24px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+/* Anon Toggle */
+.anon-toggle-container { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #888; font-weight: bold; }    
         }
     </style>
 </head>
 <body>
+    <div id="registerModal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <h2>Claim Your Identity</h2>
+            <p style="color: #888; font-size: 14px;">This nickname is permanent to your device. No two people can have the same name. You can still post anonymously later.</p>
+            <input type="text" id="regNickname" placeholder="Enter Nickname..." maxlength="20">
+            <button onclick="registerDevice()">Lock It In</button>
+        </div>
+    </div>
     <div class="container">
         <header>
             <h1>Zenith Chads</h1>
@@ -89,7 +104,13 @@
         </header>
 
        <div class="compose-box">
-            <input type="text" id="nickname-input" placeholder="Nickname (Optional)" maxlength="20" style="width: 95%; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #2a2a35; background: #0d0d12; color: white; font-family: inherit; outline: none;">
+            <!-- Replace the old nickname input with this -->
+            <div class="actions" style="margin-bottom: 10px;">
+                <div class="anon-toggle-container">
+                    <input type="checkbox" id="anonToggle" checked>
+                    <label for="anonToggle">Post as Anonymous</label>
+                </div>
+            </div>
             <textarea id="postContent" placeholder="Drop a thought anonymously... (memes, hot takes, whatever)"></textarea>
             <div class="actions">
                 <input type="file" id="mediaUpload" accept="image/*,video/*,audio/*">
@@ -202,9 +223,12 @@
             dropBtn.innerText = 'Dropping...';
 
             const formData = new FormData();
-            const nickname = document.getElementById('nickname-input').value.trim() || 'Anonymous';
             formData.append('content', content);
-            formData.append('nickname', nickname);
+            
+            // Send the Device ID and Anon status instead of the nickname
+            formData.append('deviceId', deviceId);
+            formData.append('isAnonymous', document.getElementById('anonToggle').checked);
+            
             if (fileInput.files[0]) formData.append('media', fileInput.files[0]);
 
             await fetch(API_URL, { method: 'POST', body: formData });
@@ -256,11 +280,18 @@
             await fetch(`${API_URL}/${id}/comment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, nickname })
+                // Send text, device ID, and anon status
+                body: JSON.stringify({ 
+                    text: text,
+                    deviceId: deviceId,
+                    isAnonymous: document.getElementById('anonToggle').checked 
+                })
             });
+        
         }
 
         loadPosts();
+        
     </script>
 </body>
 </html>
