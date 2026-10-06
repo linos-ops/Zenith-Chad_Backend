@@ -2,26 +2,30 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cors = require('cors');
-const fs = require('fs'); // Added file system module
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 
-// Automatically build the uploads folder if it is missing
+// 1. Auto-create uploads folder so Render doesn't crash on images
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
 
+// 2. Security and Middlewares (This is what got deleted!)
 app.set('trust proxy', true);
+app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+// 3. Multer (File Upload) Setup
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage });
 
+// 4. Database Schema
 const postSchema = new mongoose.Schema({
     content: { type: String, required: true },
     mediaUrl: { type: String, default: null },
@@ -38,7 +42,6 @@ const postSchema = new mongoose.Schema({
 const Post = mongoose.model('Post', postSchema);
 
 // --- PUBLIC ROUTES ---
-
 app.get('/api/posts', async (req, res) => {
     try {
         const posts = await Post.find().select('-ipAddress').sort({ createdAt: -1 });
@@ -84,7 +87,6 @@ app.post('/api/posts/:id/comment', async (req, res) => {
 });
 
 // --- ADMIN ROUTES ---
-
 app.get('/api/admin/posts', async (req, res) => {
     const adminToken = req.headers['x-admin-token'];
     if (adminToken !== process.env.ADMIN_SECRET) {
@@ -108,7 +110,6 @@ app.delete('/api/admin/posts/:id', async (req, res) => {
 });
 
 // --- DATABASE CONNECTION ---
-
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
