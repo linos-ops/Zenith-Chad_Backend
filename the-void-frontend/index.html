@@ -1,11 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zenith Chads</title>
-    <!-- Import a sleek, modern app font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         /* Modern App Background */
@@ -19,81 +17,87 @@
         .nav-btns button { background: transparent; color: #888; border: none; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: 15px; transition: all 0.3s ease; }
         .nav-btns button.active { background: #333344; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
+        /* Registration Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #15151e; padding: 30px; border-radius: 20px; border: 1px solid #2a2a35; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .modal-box h2 { margin-top: 0; color: #fff; }
+        .modal-box input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 1px solid #555; background: #0d0d12; color: white; font-family: inherit; font-size: 16px; outline: none; }
+        .modal-box button { background: #fff; color: #000; padding: 12px 24px; border: none; border-radius: 10px; font-weight: 800; font-size: 16px; cursor: pointer; transition: transform 0.2s; }
+        .modal-box button:active { transform: scale(0.95); }
+
         /* Floating Compose Box */
-        .compose-box { background: #15151e; border: 1px solid #2a2a35; padding: 20px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: border-color 0.3s ease; }
-        .compose-box:focus-within { border-color: #555577; }
+        .compose-box { background: #15151e; border: 1px solid #2a2a35; padding: 20px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .anon-toggle-container { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; font-weight: 600; margin-bottom: 10px; }
         textarea { width: 100%; background: transparent; color: #fff; border: none; outline: none; font-family: inherit; font-size: 16px; resize: none; min-height: 60px; }
         textarea::placeholder { color: #555; }
         .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         input[type="file"] { font-size: 12px; color: #888; max-width: 60%; cursor: pointer; }
         
-        .btn-drop { background: #fff; color: #000; border: none; padding: 10px 24px; border-radius: 30px; font-weight: 800; cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .btn-drop { background: #fff; color: #000; border: none; padding: 10px 24px; border-radius: 30px; font-weight: 800; cursor: pointer; transition: all 0.2s; }
         .btn-drop:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
         .btn-drop:active { transform: scale(0.95); }
 
         /* Twitter/App Style Post Cards */
-        .post { background: #15151e; border: 1px solid #2a2a35; padding: 20px; border-radius: 20px; margin-bottom: 20px; display: flex; gap: 15px; transition: transform 0.2s ease; }
-        
-        /* Funny Auto-Avatars */
+        .post { background: #15151e; border: 1px solid #2a2a35; padding: 20px; border-radius: 20px; margin-bottom: 20px; display: flex; gap: 15px; }
         .avatar { width: 45px; height: 45px; border-radius: 12px; background: #2a2a35; flex-shrink: 0; overflow: hidden; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
         .post-body { flex: 1; min-width: 0; }
         .meta { font-size: 13px; color: #888; margin-bottom: 8px; display: flex; gap: 10px; align-items: baseline; }
         .anon-tag { color: #fff; font-weight: 800; font-size: 15px; }
-        .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 15px; word-wrap: break-word; }
         
-        /* Media */
+        /* Spam-proof content area */
+        .content { font-size: 15px; line-height: 1.5; color: #ddd; margin-bottom: 15px; word-wrap: break-word; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        
         .post img, .post video { width: 100%; max-height: 400px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; border: 1px solid #2a2a35; }
         
-        /* Modern Interaction Bar with Icons */
+        /* Interactions */
         .interact-bar { display: flex; gap: 30px; align-items: center; }
-        .interact-btn { background: none; border: none; color: #888; font-family: inherit; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 5px 0; }
+        .interact-btn { background: none; border: none; color: #888; font-family: inherit; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s; padding: 5px 0; }
         .interact-btn svg { width: 20px; height: 20px; transition: all 0.2s ease; }
         .interact-btn:hover { color: #fff; }
-        .interact-btn:active svg { transform: scale(0.7); }
         
-        /* Liked State */
         .liked { color: #ff3b30 !important; }
         .liked svg { fill: #ff3b30; stroke: #ff3b30; animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
 
-        /* Comments Area */
+        /* Comments */
         .comments-area { display: none; margin-top: 15px; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .comment-item { font-size: 14px; color: #bbb; background: #1a1a24; padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
-        .comment-item .anon-tag { font-size: 13px; color: #fff; }
         
+        /* Spam-proof comments */
+        .comment-item { font-size: 14px; color: #bbb; background: #1a1a24; padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; gap: 10px; align-items: flex-start; word-wrap: break-word; overflow-wrap: anywhere; }
+        
+        .comment-item .anon-tag { font-size: 13px; color: #fff; }
         .comment-input-row { display: flex; gap: 10px; margin-top: 10px; }
-        .comment-input-row input { flex: 1; background: #0d0d12; border: 1px solid #2a2a35; color: #fff; padding: 12px 15px; border-radius: 20px; font-family: inherit; outline: none; transition: border-color 0.2s ease; }
-        .comment-input-row input:focus { border-color: #666; }
-        .btn-comment { background: #fff; color: #000; border: none; padding: 0 20px; border-radius: 20px; font-weight: 800; cursor: pointer; transition: transform 0.1s ease; }
-        .btn-comment:active { transform: scale(0.9); }
+        .comment-input-row input { flex: 1; background: #0d0d12; border: 1px solid #2a2a35; color: #fff; padding: 12px 15px; border-radius: 20px; font-family: inherit; outline: none; }
+        .btn-comment { background: #fff; color: #000; border: none; padding: 0 20px; border-radius: 20px; font-weight: 800; cursor: pointer; }
 
-        @media (max-width: 600px) {
-            .container { padding: 15px; }
-            .post { padding: 15px; gap: 10px; }
-            .avatar { width: 35px; height: 35px; }
-            .interact-btn svg { width: 18px; height: 18px; }
-        /* Registration Modal */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.modal-box { background: #15151e; padding: 30px; border-radius: 20px; border: 1px solid #2a2a35; text-align: center; width: 90%; max-width: 400px; }
-.modal-box input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 1px solid #555; background: #0d0d12; color: white; }
-.modal-box button { background: #fff; color: #000; padding: 12px 24px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-/* Anon Toggle */
-.anon-toggle-container { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #888; font-weight: bold; }    
-        }
+        @media (max-width: 600px) { .container { padding: 15px; } .post { padding: 15px; gap: 10px; } }
+        /* Custom File Upload & Live Preview */
+        .custom-file-upload { display: inline-flex; align-items: center; gap: 8px; background: #2a2a35; color: #ddd; padding: 10px 18px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .custom-file-upload:hover { background: #3a3a45; color: #fff; }
+        .custom-file-upload svg { width: 18px; height: 18px; }
+        
+        #mediaPreviewContainer { display: none; position: relative; width: fit-content; margin-top: 15px; margin-bottom: 5px; }
+        #mediaPreviewContainer img, #mediaPreviewContainer video { max-height: 200px; border-radius: 12px; border: 1px solid #2a2a35; object-fit: contain; }
+        #mediaPreviewContainer audio { margin-top: 10px; outline: none; }
+        
+        #clearMediaBtn { position: absolute; top: -10px; right: -10px; background: #ff3b30; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.2s; }
+        #clearMediaBtn:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
+    <!-- Registration Modal -->
     <div id="registerModal" class="modal-overlay" style="display: none;">
         <div class="modal-box">
             <h2>Claim Your Identity</h2>
-            <p style="color: #888; font-size: 14px;">This nickname is permanent to your device. No two people can have the same name. You can still post anonymously later.</p>
+            <p style="color: #888; font-size: 14px;">This nickname is permanently locked to this phone/browser. You can still use the "Post as Anonymous" toggle later.</p>
             <input type="text" id="regNickname" placeholder="Enter Nickname..." maxlength="20">
             <button onclick="registerDevice()">Lock It In</button>
         </div>
     </div>
+
     <div class="container">
         <header>
             <h1>Zenith Chads</h1>
@@ -104,16 +108,26 @@
         </header>
 
        <div class="compose-box">
-            <!-- Replace the old nickname input with this -->
-            <div class="actions" style="margin-bottom: 10px;">
-                <div class="anon-toggle-container">
-                    <input type="checkbox" id="anonToggle" checked>
-                    <label for="anonToggle">Post as Anonymous</label>
-                </div>
+            <div class="anon-toggle-container">
+                <input type="checkbox" id="anonToggle" checked>
+                <label for="anonToggle">Post as Anonymous</label>
             </div>
             <textarea id="postContent" placeholder="Drop a thought anonymously... (memes, hot takes, whatever)"></textarea>
+            
+            <!-- NEW: The Live Preview Box -->
+            <div id="mediaPreviewContainer">
+                <button id="clearMediaBtn" onclick="clearMedia()" type="button">✕</button>
+            </div>
+
             <div class="actions">
-                <input type="file" id="mediaUpload" accept="image/*,video/*,audio/*">
+                <!-- NEW: The Custom Attach Button -->
+                <label for="mediaUpload" class="custom-file-upload">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    Attach
+                </label>
+                <!-- HIDDEN: The ugly default input -->
+                <input type="file" id="mediaUpload" accept="image/*,video/*,audio/*" style="display: none;">
+                
                 <button class="btn-drop" onclick="submitPost()">Drop</button>
             </div>
         </div>
@@ -122,18 +136,81 @@
     </div>
 
     <script>
-        const API_URL = 'https://zenith-chad-backend.onrender.com/api/posts';;
-
-        // --- SVG ICONS ---
+        const API_URL = 'https://zenith-chad-backend.onrender.com/api/posts';
+        
         const heartIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
         const commentIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`;
-        window.addEventListener('DOMContentLoaded', () => {
-            const nickInput = document.getElementById('nickname-input');
-            nickInput.value = localStorage.getItem('zenith_nickname') || '';
-            nickInput.addEventListener('input', (e) => {
-                localStorage.setItem('zenith_nickname', e.target.value.trim());
-            });
-        });   
+        // --- LIVE MEDIA PREVIEW LOGIC ---
+        const fileInput = document.getElementById('mediaUpload');
+        const previewContainer = document.getElementById('mediaPreviewContainer');
+
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return clearMedia();
+            
+            const oldPreview = document.getElementById('actualPreview');
+            if (oldPreview) oldPreview.remove();
+
+            const fileUrl = URL.createObjectURL(file);
+            let previewEl;
+
+            if (file.type.startsWith('image/')) {
+                previewEl = document.createElement('img');
+            } else if (file.type.startsWith('video/')) {
+                previewEl = document.createElement('video');
+                previewEl.controls = true;
+            } else if (file.type.startsWith('audio/')) {
+                previewEl = document.createElement('audio');
+                previewEl.controls = true;
+            }
+
+            if (previewEl) {
+                previewEl.src = fileUrl;
+                previewEl.id = 'actualPreview';
+                previewContainer.appendChild(previewEl);
+                previewContainer.style.display = 'block';
+            }
+        });
+
+        function clearMedia() {
+            fileInput.value = '';
+            previewContainer.style.display = 'none';
+            const oldPreview = document.getElementById('actualPreview');
+            if (oldPreview) {
+                URL.revokeObjectURL(oldPreview.src);
+                oldPreview.remove();
+            }
+        }  
+        // --- IDENTITY MANAGEMENT ---
+        let deviceId = localStorage.getItem('zenith_device_id');
+        if (!deviceId) {
+            deviceId = 'chad_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('zenith_device_id', deviceId);
+        }
+
+        if (!localStorage.getItem('zenith_nickname')) {
+            document.getElementById('registerModal').style.display = 'flex';
+        }
+
+        async function registerDevice() {
+            const nick = document.getElementById('regNickname').value.trim();
+            if (!nick) return alert("Enter a name");
+            
+            try {
+                const res = await fetch('https://zenith-chad-backend.onrender.com/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceId, nickname: nick })
+                });
+                const data = await res.json();
+                
+                if (data.error) return alert(data.error);
+                
+                localStorage.setItem('zenith_nickname', nick);
+                document.getElementById('registerModal').style.display = 'none';
+            } catch (err) { alert("Server error. Try again."); }
+        }
+
         function getLikedPosts() { return JSON.parse(localStorage.getItem('void_liked_posts') || '[]'); }
         function saveLikedPost(id) {
             const likes = getLikedPosts();
@@ -165,28 +242,24 @@
                         else if (post.mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaHtml = `<audio controls src="${url}"></audio>`;
                     }
 
-                    // Format Time (e.g. "Oct 6, 11:30 AM")
                     const date = new Date(post.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
                     
-                    // Comments Loop
                     let commentsHtml = post.comments.map(c => `
-                        <span class="anon-tag">${c.nickname || 'Anonymous'}:</span>
-                            <span class="anon-tag">Anon:</span> 
+                        <div class="comment-item">
+                            <span class="anon-tag">${c.nickname || 'Anonymous'}:</span> 
                             <span>${c.text}</span>
                         </div>
                     `).join('');
                     
-                    // Generate a unique, funny avatar based on the post ID using DiceBear API
                     const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${post._id}&backgroundColor=b6e3f4`;
-
-                    const hasLiked = likedPosts.includes(post._id);
-                    const likeClass = hasLiked ? 'interact-btn liked' : 'interact-btn';
+                    const likeClass = likedPosts.includes(post._id) ? 'interact-btn liked' : 'interact-btn';
+                    const pinHtml = post.isPinned ? '<span style="color: #ff3b30; font-weight: 800; margin-right: 5px;">📌 PINNED</span>' : '';
 
                     postEl.innerHTML = `
                         <div class="avatar"><img src="${avatarUrl}" alt="Avatar"></div>
                         <div class="post-body">
                             <div class="meta">
-                                ${post.isPinned ? '<span style="color: #ff3b30; font-weight: 800; margin-right: 5px;">📌 PINNED</span>' : ''}
+                                ${pinHtml}
                                 <span class="anon-tag">${post.nickname || 'Anonymous'}</span>
                                 <span>• ${date}</span>
                             </div>
@@ -217,38 +290,37 @@
         async function submitPost() {
             const content = document.getElementById('postContent').value;
             const fileInput = document.getElementById('mediaUpload');
-            if (!content.trim() && !fileInput.files[0]) return;
+            
+            if (!content.trim() && !fileInput.files[0]) return alert("Type something or add media.");
 
             const dropBtn = document.querySelector('.btn-drop');
             dropBtn.innerText = 'Dropping...';
 
             const formData = new FormData();
             formData.append('content', content);
-            
-            // Send the Device ID and Anon status instead of the nickname
             formData.append('deviceId', deviceId);
             formData.append('isAnonymous', document.getElementById('anonToggle').checked);
             
             if (fileInput.files[0]) formData.append('media', fileInput.files[0]);
 
-            await fetch(API_URL, { method: 'POST', body: formData });
-            
-            document.getElementById('postContent').value = '';
-            fileInput.value = '';
-            dropBtn.innerText = 'Drop';
-            loadPosts(); 
+          try {
+                await fetch(API_URL, { method: 'POST', body: formData });
+                document.getElementById('postContent').value = '';
+                clearMedia(); // <-- THIS CLEARS THE PREVIEW
+                dropBtn.innerText = 'Drop';
+                loadPosts(); 
+            } catch (err) {
+                alert("Failed to drop post. Make sure you registered a nickname!");
+                dropBtn.innerText = 'Drop';
+            }
         }
 
         async function likePost(id) {
-            const likedPosts = getLikedPosts();
-            if (likedPosts.includes(id)) return; 
-
-            // Instant UI Update: Make it pop and turn red
+            if (getLikedPosts().includes(id)) return; 
             const btn = document.getElementById(`like-btn-${id}`);
             const countSpan = document.getElementById(`like-count-${id}`);
             btn.className = 'interact-btn liked';
             countSpan.innerText = parseInt(countSpan.innerText) + 1;
-            
             saveLikedPost(id);
             await fetch(`${API_URL}/${id}/like`, { method: 'POST' });
         }
@@ -262,13 +334,14 @@
             const input = document.getElementById(`input-${id}`);
             const text = input.value.trim();
             if (!text) return;
-            const nickname = localStorage.getItem('zenith_nickname') || 'Anonymous';
 
-            // Instant UI Update
+            const isAnon = document.getElementById('anonToggle').checked;
+            const displayNick = isAnon ? 'Anonymous' : localStorage.getItem('zenith_nickname') || 'Anonymous';
+
             const commentList = document.getElementById(`comment-list-${id}`);
             commentList.insertAdjacentHTML('beforeend', `
                 <div class="comment-item">
-                    <span class="anon-tag">${nickname}:</span>
+                    <span class="anon-tag">${displayNick}:</span> 
                     <span>${text}</span>
                 </div>
             `);
@@ -280,18 +353,15 @@
             await fetch(`${API_URL}/${id}/comment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Send text, device ID, and anon status
                 body: JSON.stringify({ 
                     text: text,
                     deviceId: deviceId,
-                    isAnonymous: document.getElementById('anonToggle').checked 
+                    isAnonymous: isAnon
                 })
             });
-        
         }
 
         loadPosts();
-        
     </script>
 </body>
 </html>
