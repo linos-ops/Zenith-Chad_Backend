@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Zenith Chads</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://api.dicebear.com https://zenith-chad-backend.onrender.com; media-src 'self' blob: https://res.cloudinary.com https://zenith-chad-backend.onrender.com; connect-src 'self' https://zenith-chad-backend.onrender.com; object-src 'none'; base-uri 'none'">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d0d12">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zenith Chads">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         /* Modern App Background */
@@ -85,25 +94,122 @@
         
         #clearMediaBtn { position: absolute; top: -10px; right: -10px; background: #ff3b30; color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; transition: transform 0.2s; }
         #clearMediaBtn:active { transform: scale(0.9); }
+    
+        [hidden] { display: none !important; }
+        .mnote { color: #999; font-size: 14px; line-height: 1.5; } .mnote.small { font-size: 12px; margin-top: 14px; }
+        .mhint { min-height: 20px; font-size: 14px; margin-bottom: 8px; }
+        .mlink { color: #aaa; font-size: 13px; display: inline-block; margin-top: 12px; }
+        .codebox { font: 800 24px 'Courier New', monospace; letter-spacing: 2px; background: #0d0d12; border: 1px dashed #ff2d87; color: #ff2d87; padding: 16px 8px; border-radius: 12px; margin: 14px 0; user-select: all; -webkit-user-select: all; }
+        .modal-box button + button { margin-left: 8px; background: #2a2a35; color: #fff; }
+        /* ---- App feel: safe areas, no accidental text selection on buttons, smooth taps ---- */
+        html { -webkit-text-size-adjust: 100%; }
+        body { min-height: 100vh; min-height: 100dvh; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+        .container { padding-top: max(15px, env(safe-area-inset-top)); padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 30px)); padding-left: max(15px, env(safe-area-inset-left)); padding-right: max(15px, env(safe-area-inset-right)); }
+        button, label, .nav-btns { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+        input, textarea { font-size: 16px; } /* stops iPhone zooming in on typing */
+        .nav-btns button.refresh { font-size: 18px; padding: 6px 14px; }
+        .note { text-align: center; color: #888; padding: 30px 10px; font-size: 14px; }
+        .offline-bar { position: sticky; top: 0; z-index: 900; background: #ff3b30; color: #fff; text-align: center; font-size: 13px; font-weight: 700; padding: 6px; border-radius: 10px; margin-bottom: 12px; }
+        .install-bar { position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 950; background: #1a1a24; border: 1px solid #333344; border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.6); max-width: 576px; margin: 0 auto; font-size: 14px; }
+        .install-bar[hidden] { display: none; }
+        .install-bar span { flex: 1; }
+        .install-bar button { background: #ff2d87; color: #000; border: none; border-radius: 10px; padding: 8px 14px; font-weight: 800; cursor: pointer; }
+        .install-bar button#installX { background: transparent; color: #888; padding: 8px; }
+
+        /* ---- Notifications: bell, sheet, banner (Instagram style) ---- */
+        .top-row { display: flex; align-items: center; justify-content: space-between; }
+        .bell { position: relative; background: #1a1a24; border: 1px solid #2a2a35; color: #ddd; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+        .bell:active { transform: scale(.92); }
+        .bell svg { width: 22px; height: 22px; }
+        .badge { position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: #ff3040; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #0d0d12; }
+        .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 980; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn .2s; }
+        .sheet { background: #15151e; border: 1px solid #2a2a35; border-bottom: none; border-radius: 24px 24px 0 0; width: 100%; max-width: 600px; max-height: 86vh; max-height: 86dvh; display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); animation: sheetUp .28s cubic-bezier(.2,.8,.2,1); }
+        .sheet-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 8px; }
+        .sheet-head h2 { margin: 0; font-size: 20px; }
+        .sheet-x { background: #2a2a35; color: #ddd; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 15px; cursor: pointer; }
+        .sheet-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 12px 24px; }
+        .sec { color: #888; font-size: 13px; font-weight: 800; padding: 14px 8px 6px; }
+        .note-row { display: flex; gap: 12px; align-items: center; padding: 12px 8px; border-radius: 14px; cursor: pointer; }
+        .note-row:active { background: #1f1f2b; }
+        .note-row.unread { background: rgba(255,45,135,.09); }
+        .note-ic { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; background: linear-gradient(135deg, #7c3aed, #ff2d87); }
+        .note-ic.like { background: linear-gradient(135deg, #ff3040, #ff2d87); }
+        .note-ic.like svg { fill: #fff; }
+        .note-ic svg { width: 22px; height: 22px; }
+        .note-txt { flex: 1; min-width: 0; font-size: 14px; line-height: 1.4; color: #bbb; overflow-wrap: anywhere; }
+        .note-txt b { color: #fff; }
+        .note-time { color: #777; font-size: 12px; margin-left: 6px; white-space: nowrap; }
+        .dot { width: 9px; height: 9px; border-radius: 50%; background: #ff2d87; flex-shrink: 0; }
+        .push-card { margin: 6px 8px 4px; padding: 16px; border-radius: 16px; background: #1a1a24; border: 1px solid #2a2a35; font-size: 14px; color: #bbb; line-height: 1.45; }
+        .push-card h3 { margin: 0 0 4px; color: #fff; font-size: 16px; }
+        .push-card .go { margin-top: 12px; background: #ff2d87; color: #000; border: none; border-radius: 12px; padding: 10px 16px; font-weight: 800; cursor: pointer; font-family: inherit; }
+        .push-card .link { margin-top: 10px; background: none; border: none; color: #888; font-size: 13px; cursor: pointer; padding: 0; font-family: inherit; text-decoration: underline; }
+        .tg { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-top: 1px solid #2a2a35; color: #ddd; }
+        .tg:first-of-type { margin-top: 10px; }
+        .sw { position: relative; width: 46px; height: 28px; flex-shrink: 0; }
+        .sw input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+        .sw i { position: absolute; inset: 0; background: #3a3a45; border-radius: 14px; transition: background .2s; }
+        .sw i:before { content: ''; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
+        .sw input:checked + i { background: #ff2d87; }
+        .sw input:checked + i:before { transform: translateX(18px); }
+        .toast { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 12px; right: 12px; max-width: 560px; margin: 0 auto; z-index: 1100; display: flex; gap: 12px; align-items: center; background: rgba(32,32,44,.94); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid #3a3a4a; border-radius: 20px; padding: 12px 14px; box-shadow: 0 12px 34px rgba(0,0,0,.6); cursor: pointer; animation: toastIn .35s cubic-bezier(.2,.9,.3,1.15); }
+        .toast.out { animation: toastOut .25s forwards; }
+        .toast img { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; }
+        .toast .tt { font-weight: 800; font-size: 14px; color: #fff; }
+        .toast .tb { font-size: 13px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .post.flash { animation: flash 1.8s; }
+        #pushX { background: transparent; color: #888; padding: 8px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sheetUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+        @keyframes toastIn { from { transform: translateY(-130%); opacity: 0; } to { transform: none; opacity: 1; } }
+        @keyframes toastOut { to { transform: translateY(-130%); opacity: 0; } }
+        @keyframes flash { 0%, 55% { box-shadow: 0 0 0 2px #ff2d87, 0 0 30px rgba(255,45,135,.35); } 100% { box-shadow: none; } }
+        @media (prefers-reduced-motion: reduce) { .toast, .sheet, .sheet-overlay, .post.flash { animation: none; } }
     </style>
 </head>
 <body>
-    <!-- Registration Modal -->
+    <!-- Sign-up / recovery -->
     <div id="registerModal" class="modal-overlay" style="display: none;">
         <div class="modal-box">
-            <h2>Claim Your Identity</h2>
-            <p style="color: #888; font-size: 14px;">This nickname is permanently locked to this phone/browser. You can still use the "Post as Anonymous" toggle later.</p>
-            <input type="text" id="regNickname" placeholder="Enter Nickname..." maxlength="20">
-            <button onclick="registerDevice()">Lock It In</button>
+            <div id="stepName">
+                <h2>Pick your username</h2>
+                <p class="mnote">It is permanent and tied to this phone. No email, no password.</p>
+                <input type="text" id="regNickname" placeholder="username" maxlength="20" autocapitalize="off" autocomplete="off" spellcheck="false">
+                <div id="nameHint" class="mhint"></div>
+                <button id="regBtn" onclick="registerDevice()">Lock it in</button>
+                <p class="mnote small">Other students and staff cannot see who you are. The site admin keeps your username, IP address and device details, and can identify you if you harass someone or break the law. Posts are deleted after 90 days; these account records are kept.</p>
+                <a href="#" class="mlink" onclick="showStep('stepRecover'); return false;">I already have a username</a>
+            </div>
+            <div id="stepCode" hidden>
+                <h2>Save your recovery code</h2>
+                <p class="mnote">If you lose or change your phone, this code gets your username back. It is shown only once. Screenshot it or write it down.</p>
+                <div id="codeBox" class="codebox"></div>
+                <button onclick="copyCode()">Copy</button><button onclick="finishSignup()">I saved it</button>
+            </div>
+            <div id="stepRecover" hidden>
+                <h2>Get your username back</h2>
+                <input type="text" id="recNick" placeholder="your username" autocapitalize="off" autocomplete="off">
+                <input type="text" id="recCode" placeholder="XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off">
+                <button onclick="recoverAccount()">Recover</button>
+                <br><a href="#" class="mlink" onclick="showStep('stepName'); return false;">Back</a>
+            </div>
         </div>
     </div>
 
     <div class="container">
+        <div id="offlineBar" class="offline-bar" hidden>You are offline. Showing saved posts.</div>
         <header>
-            <h1>Zenith Chads</h1>
+            <div class="top-row">
+                <h1>Zenith Chads</h1>
+                <button id="bellBtn" class="bell" aria-label="Notifications" onclick="openNotes()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span id="bellBadge" class="badge" hidden>0</span>
+                </button>
+            </div>
             <div class="nav-btns">
                 <button id="btn-latest" onclick="loadPosts('latest')" class="active">Latest</button>
                 <button id="btn-trending" onclick="loadPosts('trending')">Trending</button>
+                <button class="refresh" onclick="loadPosts(currentSort)" aria-label="Refresh">↻</button>
             </div>
         </header>
 
@@ -135,8 +241,42 @@
         <div id="feed"></div>
     </div>
 
+    <div id="notePanel" class="sheet-overlay" hidden>
+        <div class="sheet" role="dialog" aria-label="Notifications">
+            <div class="sheet-head"><h2>Notifications</h2><button class="sheet-x" onclick="closeNotes()" aria-label="Close">✕</button></div>
+            <div class="sheet-body">
+                <div id="pushCard" class="push-card" hidden></div>
+                <div id="noteList"></div>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="toast" hidden role="status"></div>
+    <div id="pushBar" class="install-bar" hidden><span>Get notified when someone replies to you?</span><button id="pushOn">Turn on</button><button id="pushX" aria-label="Close">✕</button></div>
+
+    <div id="installBar" class="install-bar" hidden><span id="installTxt"></span><button id="installBtn" hidden>Install</button><button id="installX" aria-label="Close">✕</button></div>
+
     <script>
         const API_URL = 'https://zenith-chad-backend.onrender.com/api/posts';
+        const MAX_MB = 60;
+
+        // Show user text as plain text (stops HTML injection)
+        const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        // Makes photos, videos and audio play on iPhone, Android and desktop
+        function mediaTag(url, type) {
+            const full = url.startsWith('http') ? url : `https://zenith-chad-backend.onrender.com${url}`;
+            const ext = ((full.split('?')[0].match(/\.(\w+)$/) || [])[1] || '').toLowerCase();
+            const kind = type || (/^(mp4|mov|m4v|webm|3gp)$/.test(ext) ? 'video' : /^(mp3|m4a|aac|wav|ogg)$/.test(ext) ? 'audio' : 'image');
+            if (!full.includes('/upload/')) return `<img src="${esc(full)}" alt="">`;
+            const fix = t => full.replace('/upload/', `/upload/${t}/`);
+            if (kind === 'video') {
+                const mp4 = fix('f_mp4,vc_h264,ac_aac,q_auto').replace(/\.\w+$/, '.mp4');
+                const poster = fix('so_0,f_jpg,q_auto').replace(/\.\w+$/, '.jpg');
+                return `<video controls playsinline preload="metadata" poster="${esc(poster)}" src="${esc(mp4)}"></video>`;
+            }
+            if (kind === 'audio') return `<audio controls preload="none" src="${esc(fix('f_mp3').replace(/\.\w+$/, '.mp3'))}"></audio>`;
+            return `<img loading="lazy" alt="Posted image" src="${esc(fix('f_auto,q_auto,w_1080').replace(/\.\w+$/, ''))}">`;
+        }
         
         const heartIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
         const commentIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`;
@@ -151,6 +291,7 @@
             const oldPreview = document.getElementById('actualPreview');
             if (oldPreview) oldPreview.remove();
 
+            if (file.size > MAX_MB * 1024 * 1024) { alert(`That file is too big. Max ${MAX_MB} MB.`); return clearMedia(); }
             const fileUrl = URL.createObjectURL(file);
             let previewEl;
 
@@ -158,7 +299,8 @@
                 previewEl = document.createElement('img');
             } else if (file.type.startsWith('video/')) {
                 previewEl = document.createElement('video');
-                previewEl.controls = true;
+                previewEl.controls = true; previewEl.playsInline = true; previewEl.muted = true;
+                previewEl.onerror = () => { previewEl.replaceWith(Object.assign(document.createElement('div'), { id: 'actualPreview', textContent: '🎞️ Video selected. Preview is not available on this device, but it will upload.', style: 'color:#aaa;font-size:13px;padding:10px' })); };
             } else if (file.type.startsWith('audio/')) {
                 previewEl = document.createElement('audio');
                 previewEl.controls = true;
@@ -181,34 +323,61 @@
                 oldPreview.remove();
             }
         }  
-        // --- IDENTITY MANAGEMENT ---
-        let deviceId = localStorage.getItem('zenith_device_id');
-        if (!deviceId) {
-            deviceId = 'chad_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('zenith_device_id', deviceId);
+        // --- IDENTITY: the server gives each phone a secret key ---
+        const BASE = 'https://zenith-chad-backend.onrender.com';
+        // Phone model (Android Chrome shares it on request). Sent with every call so the admin log has a device name.
+        let devHint = localStorage.getItem('zc_dev') || '';
+        const devName = () => devHint.replace(/[^\x20-\x7E]/g, '').slice(0, 60);
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) navigator.userAgentData.getHighEntropyValues(['model']).then(v => { devHint = (v.model || '').trim(); localStorage.setItem('zc_dev', devHint); }).catch(() => {});
+        const authH = () => ({ 'x-device-token': localStorage.getItem('zenith_token') || '', 'x-device-name': devName() });
+        const modal = document.getElementById('registerModal');
+        let pendingNick = '';
+        function showStep(id) { ['stepName', 'stepCode', 'stepRecover'].forEach(x => document.getElementById(x).hidden = x !== id); }
+        function openSignup() { modal.style.display = 'flex'; showStep('stepName'); }
+        function showCode(code, nick) { pendingNick = nick; document.getElementById('codeBox').textContent = code; modal.style.display = 'flex'; showStep('stepCode'); }
+        function finishSignup() { localStorage.setItem('zenith_nickname', pendingNick); modal.style.display = 'none'; }
+        async function copyCode() { try { await navigator.clipboard.writeText(document.getElementById('codeBox').textContent); alert('Copied'); } catch (e) { alert('Could not copy. Screenshot it instead.'); } }
+        function keep(d) { if (d.token) localStorage.setItem('zenith_token', d.token); showCode(d.recoveryCode, d.nickname); }
+        async function startSession() {
+            try {
+                const res = await fetch(`${BASE}/api/session`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authH() },
+                    body: JSON.stringify({ legacyDeviceId: localStorage.getItem('zenith_device_id') || '' }) });
+                const d = await res.json();
+                if (d.token) localStorage.setItem('zenith_token', d.token);
+                if (d.nickname) { localStorage.setItem('zenith_nickname', d.nickname); if (d.recoveryCode) showCode(d.recoveryCode, d.nickname); }
+                else { localStorage.removeItem('zenith_nickname'); openSignup(); }
+            } catch (e) { /* server may be waking up; posting will ask again if needed */ }
         }
-
-        if (!localStorage.getItem('zenith_nickname')) {
-            document.getElementById('registerModal').style.display = 'flex';
-        }
-
+        let nameTimer;
+        document.addEventListener('input', e => {
+            if (e.target.id !== 'regNickname') return;
+            clearTimeout(nameTimer);
+            const v = e.target.value.trim(), h = document.getElementById('nameHint');
+            if (v.length < 3) { h.textContent = ''; return; }
+            nameTimer = setTimeout(async () => {
+                try { const d = await (await fetch(`${BASE}/api/username/check?name=${encodeURIComponent(v)}`)).json();
+                    h.textContent = d.ok ? '✅ Available' : '❌ ' + d.error; h.style.color = d.ok ? '#4dff9a' : '#ff5c7a'; } catch (er) {}
+            }, 400);
+        });
         async function registerDevice() {
             const nick = document.getElementById('regNickname').value.trim();
-            if (!nick) return alert("Enter a name");
-            
+            if (!nick) return alert('Enter a username');
+            const b = document.getElementById('regBtn'); b.disabled = true;
             try {
-                const res = await fetch('https://zenith-chad-backend.onrender.com/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deviceId, nickname: nick })
-                });
-                const data = await res.json();
-                
-                if (data.error) return alert(data.error);
-                
-                localStorage.setItem('zenith_nickname', nick);
-                document.getElementById('registerModal').style.display = 'none';
-            } catch (err) { alert("Server error. Try again."); }
+                const res = await fetch(`${BASE}/api/register`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authH() }, body: JSON.stringify({ nickname: nick }) });
+                const d = await res.json();
+                if (!res.ok) return alert(d.error || 'Could not sign up.');
+                keep(d);
+            } catch (e) { alert('The server is waking up. Try again in a few seconds.'); } finally { b.disabled = false; }
+        }
+        async function recoverAccount() {
+            try {
+                const res = await fetch(`${BASE}/api/recover`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-device-name': devName() },
+                    body: JSON.stringify({ nickname: document.getElementById('recNick').value.trim(), code: document.getElementById('recCode').value }) });
+                const d = await res.json();
+                if (!res.ok) return alert(d.error || 'Could not recover.');
+                keep(d);
+            } catch (e) { alert('The server is waking up. Try again in a few seconds.'); }
         }
 
         function getLikedPosts() { return JSON.parse(localStorage.getItem('void_liked_posts') || '[]'); }
@@ -217,7 +386,11 @@
             if (!likes.includes(id)) { likes.push(id); localStorage.setItem('void_liked_posts', JSON.stringify(likes)); }
         }
 
+        let currentSort = 'latest', lastLoad = 0;
         async function loadPosts(sort = 'latest') {
+            currentSort = sort; lastLoad = Date.now();
+            const feedBox = document.getElementById('feed');
+            if (!feedBox.children.length) feedBox.innerHTML = '<div class="note">Loading the feed… the first open can take up to 30 seconds while the server wakes up.</div>';
             document.getElementById('btn-latest').className = sort === 'latest' ? 'active' : '';
             document.getElementById('btn-trending').className = sort === 'trending' ? 'active' : '';
 
@@ -232,22 +405,15 @@
 
                 posts.forEach(post => {
                     const postEl = document.createElement('div');
-                    postEl.className = 'post';
+                    postEl.className = 'post'; postEl.id = 'post-' + post._id;
                     
-                    let mediaHtml = '';
-                    if (post.mediaUrl) {
-                        const url = post.mediaUrl.startsWith('http') ? post.mediaUrl : `https://zenith-chad-backend.onrender.com${post.mediaUrl}`;
-                        if (post.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) mediaHtml = `<img src="${url}">`;
-                        else if (post.mediaUrl.match(/\.(mp4|webm)$/i)) mediaHtml = `<video controls src="${url}"></video>`;
-                        else if (post.mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaHtml = `<audio controls src="${url}"></audio>`;
-                    }
-
+                    const mediaHtml = post.mediaUrl ? mediaTag(post.mediaUrl, post.mediaType) : '';
                     const date = new Date(post.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
                     
                     let commentsHtml = post.comments.map(c => `
                         <div class="comment-item">
-                            <span class="anon-tag">${c.nickname || 'Anonymous'}:</span> 
-                            <span>${c.text}</span>
+                            <span class="anon-tag">${esc(c.nickname || 'Anonymous')}:</span> 
+                            <span>${esc(c.text)}</span>
                         </div>
                     `).join('');
                     
@@ -260,10 +426,10 @@
                         <div class="post-body">
                             <div class="meta">
                                 ${pinHtml}
-                                <span class="anon-tag">${post.nickname || 'Anonymous'}</span>
+                                <span class="anon-tag">${esc(post.nickname || 'Anonymous')}</span>
                                 <span>• ${date}</span>
                             </div>
-                            <div class="content">${post.content}</div>
+                            <div class="content">${esc(post.content)}</div>
                             ${mediaHtml}
                             <div class="interact-bar">
                                 <button id="like-btn-${post._id}" class="${likeClass}" onclick="likePost('${post._id}')">
@@ -284,7 +450,11 @@
                     `;
                     feed.appendChild(postEl);
                 });
-            } catch (err) { console.error("Failed to load feed", err); }
+            if (!posts.length) feed.innerHTML = '<div class="note">Nothing here yet. Be the first to drop something 👀</div>';
+            } catch (err) {
+                console.error("Failed to load feed", err);
+                document.getElementById('feed').innerHTML = '<div class="note">Could not load the feed. Check your internet.<br><br><button class="btn-drop" onclick="loadPosts(currentSort)">Try again</button></div>';
+            }
         }
 
         async function submitPost() {
@@ -294,24 +464,32 @@
             if (!content.trim() && !fileInput.files[0]) return alert("Type something or add media.");
 
             const dropBtn = document.querySelector('.btn-drop');
-            dropBtn.innerText = 'Dropping...';
+            dropBtn.innerText = fileInput.files[0] ? 'Uploading... (videos take a moment)' : 'Dropping...';
 
             const formData = new FormData();
             formData.append('content', content);
-            formData.append('deviceId', deviceId);
-            formData.append('isAnonymous', document.getElementById('anonToggle').checked);
+                        formData.append('isAnonymous', document.getElementById('anonToggle').checked);
             
             if (fileInput.files[0]) formData.append('media', fileInput.files[0]);
 
-          try {
-                await fetch(API_URL, { method: 'POST', body: formData });
+          dropBtn.disabled = true;
+            try {
+                const res = await fetch(API_URL, { method: 'POST', headers: authH(), body: formData });
+                if (!res.ok) {
+                    if (res.status === 401) openSignup();
+                    let msg = 'Failed to post. Try again.';
+                    try { msg = (await res.json()).error || msg; } catch (e) {}
+                    throw new Error(msg);
+                }
                 document.getElementById('postContent').value = '';
-                clearMedia(); // <-- THIS CLEARS THE PREVIEW
-                dropBtn.innerText = 'Drop';
-                loadPosts(); 
+                clearMedia();
+                loadPosts();
+                maybeAskPush();
             } catch (err) {
-                alert("Failed to drop post. Make sure you registered a nickname!");
+                alert(err.message || "Failed to drop post. Check your internet and try again.");
+            } finally {
                 dropBtn.innerText = 'Drop';
+                dropBtn.disabled = false;
             }
         }
 
@@ -322,7 +500,7 @@
             btn.className = 'interact-btn liked';
             countSpan.innerText = parseInt(countSpan.innerText) + 1;
             saveLikedPost(id);
-            await fetch(`${API_URL}/${id}/like`, { method: 'POST' });
+            await fetch(`${API_URL}/${id}/like`, { method: 'POST', headers: authH() });
         }
 
         function toggleComments(id) {
@@ -341,8 +519,8 @@
             const commentList = document.getElementById(`comment-list-${id}`);
             commentList.insertAdjacentHTML('beforeend', `
                 <div class="comment-item">
-                    <span class="anon-tag">${displayNick}:</span> 
-                    <span>${text}</span>
+                    <span class="anon-tag">${esc(displayNick)}:</span> 
+                    <span>${esc(text)}</span>
                 </div>
             `);
             
@@ -352,16 +530,212 @@
 
             await fetch(`${API_URL}/${id}/comment`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...authH() },
                 body: JSON.stringify({ 
                     text: text,
-                    deviceId: deviceId,
                     isAnonymous: isAnon
                 })
             });
+            maybeAskPush();
         }
 
-        loadPosts();
+
+        // ---- APP MODE: install prompt, offline banner, refresh when you come back ----
+        const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const bar = document.getElementById('installBar'), btn = document.getElementById('installBtn');
+        let deferred = null;
+        function showInstall(text, canClick) {
+            if (standalone || localStorage.getItem('zc_install_dismissed')) return;
+            document.getElementById('installTxt').textContent = text;
+            btn.hidden = !canClick; bar.hidden = false;
+        }
+        window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; showInstall('Install Zenith Chads as an app', true); });
+        if (isIOS && !standalone) setTimeout(() => showInstall('Install: tap Share ⬆️ then "Add to Home Screen"', false), 4000);
+        btn.onclick = async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; bar.hidden = true; };
+        document.getElementById('installX').onclick = () => { bar.hidden = true; localStorage.setItem('zc_install_dismissed', '1'); };
+        window.addEventListener('appinstalled', () => { bar.hidden = true; });
+
+        const offBar = document.getElementById('offlineBar');
+        const setOnline = () => { offBar.hidden = navigator.onLine; };
+        window.addEventListener('online', () => { setOnline(); loadPosts(currentSort); });
+        window.addEventListener('offline', setOnline);
+        setOnline();
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && Date.now() - lastLoad > 30000) loadPosts(currentSort);
+        });
+
+        if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+
+
+        // ================= NOTIFICATIONS: bell, in-app banner, phone alerts, app-icon badge =================
+        const bellBadge = document.getElementById('bellBadge'), notePanel = document.getElementById('notePanel');
+        const noteList = document.getElementById('noteList'), pushCard = document.getElementById('pushCard'), toastEl = document.getElementById('toast');
+        const pushBar = document.getElementById('pushBar');
+        const pushSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+        let notes = [], unread = 0, notePrefs = { likes: true, comments: true, posts: true }, seen = null, notePoll = null, toastTimer = null;
+
+        const hasToken = () => !!localStorage.getItem('zenith_token');
+        const ago = d => { const s = Math.max(1, (Date.now() - new Date(d)) / 1000);
+            return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : s < 604800 ? Math.floor(s / 86400) + 'd' : Math.floor(s / 604800) + 'w'; };
+        const swReady = () => 'serviceWorker' in navigator ? Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 4000))]) : Promise.resolve(null);
+        const b64u = k => { const pad = '='.repeat((4 - k.length % 4) % 4), raw = atob((k + pad).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(raw, c => c.charCodeAt(0)); };
+
+        // Red number on the bell, the tab title and the app icon
+        function setBadge(n) {
+            unread = n;
+            bellBadge.hidden = n < 1; bellBadge.textContent = n > 99 ? '99+' : n;
+            document.title = n > 0 ? `(${n}) Zenith Chads` : 'Zenith Chads';
+            try { const p = n > 0 ? navigator.setAppBadge && navigator.setAppBadge(n) : navigator.clearAppBadge && navigator.clearAppBadge(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+        }
+
+        const describe = n => n.type === 'like'
+            ? { who: n.count > 1 ? n.count + ' people' : 'Someone', what: ' liked your post', title: n.count > 1 ? `${n.count} people liked your post` : 'Someone liked your post', body: '' }
+            : n.type === 'thread' ? { who: n.actor || 'Anonymous', what: ' also commented: ' + (n.text || ''), title: `${n.actor || 'Anonymous'} also commented`, body: n.text }
+            : { who: n.actor || 'Anonymous', what: ' commented: ' + (n.text || ''), title: `${n.actor || 'Anonymous'} commented on your post`, body: n.text };
+
+        async function loadNotes(silent) {
+            if (!hasToken()) return;
+            try {
+                const res = await fetch(`${BASE}/api/notifications`, { headers: authH() });
+                if (!res.ok) return;
+                const d = await res.json();
+                const keyOf = n => n._id + ':' + (n.count || 1);
+                const fresh = seen ? d.items.filter(n => !n.read && !seen.has(keyOf(n))) : [];   // first load never pops banners for old items
+                seen = new Set([...(seen || []), ...d.items.map(keyOf)]);
+                notes = d.items; notePrefs = d.prefs; setBadge(d.unread);
+                if (!notePanel.hidden) renderNotes();
+                else if (fresh.length && !silent && !document.hidden) { const n = fresh[0], t = describe(n); showToast(t.title, t.body, () => goToPost(n.postId, true)); }
+            } catch (e) { /* offline or server waking up */ }
+        }
+
+        function renderNotes() {
+            const row = n => { const t = describe(n);
+                const ic = n.type === 'like' ? heartIcon : commentIcon;
+                return `<div class="note-row${n.read ? '' : ' unread'}" data-post="${esc(n.postId)}">
+                    <div class="note-ic ${esc(n.type)}">${ic}</div>
+                    <div class="note-txt"><b>${esc(t.who)}</b>${esc(t.what)}<span class="note-time">${ago(n.createdAt)}</span></div>
+                    ${n.read ? '' : '<span class="dot"></span>'}</div>`; };
+            const fresh = notes.filter(n => !n.read), old = notes.filter(n => n.read);
+            noteList.innerHTML = !notes.length
+                ? '<div class="note">Nothing yet. When someone likes or comments on your posts, you will see it here.</div>'
+                : (fresh.length ? `<div class="sec">New</div>${fresh.map(row).join('')}` : '') + (old.length ? `<div class="sec">Earlier</div>${old.map(row).join('')}` : '');
+        }
+        noteList.addEventListener('click', e => { const r = e.target.closest('.note-row'); if (r) { closeNotes(); goToPost(r.dataset.post, true); } });
+
+        async function openNotes() {
+            if (!hasToken()) return openSignup();
+            notePanel.hidden = false; document.body.style.overflow = 'hidden';
+            renderNotes(); renderPushCard();
+            await loadNotes(true);
+            if (unread > 0) { setBadge(0); fetch(`${BASE}/api/notifications/read`, { method: 'POST', headers: authH() }).catch(() => {}); }
+        }
+        function closeNotes() { notePanel.hidden = true; document.body.style.overflow = ''; notes.forEach(n => n.read = true); }
+        notePanel.addEventListener('click', e => { if (e.target === notePanel) closeNotes(); });
+
+        // Banner that drops from the top, like Instagram
+        function showToast(title, body, onTap) {
+            clearTimeout(toastTimer);
+            toastEl.className = 'toast'; toastEl.hidden = false;
+            toastEl.innerHTML = `<img src="/icons/icon-192.png" alt=""><div style="min-width:0"><div class="tt">${esc(title)}</div>${body ? `<div class="tb">${esc(body)}</div>` : ''}</div>`;
+            toastEl.onclick = () => { hideToast(); if (onTap) onTap(); };
+            toastTimer = setTimeout(hideToast, 5000);
+        }
+        function hideToast() { toastEl.classList.add('out'); setTimeout(() => { if (toastEl.classList.contains('out')) toastEl.hidden = true; }, 250); }
+
+        // Jump to a post, open its comments, and flash it
+        async function goToPost(id, openComments) {
+            if (!/^[a-f0-9]{24}$/i.test(String(id))) return;
+            if (!document.getElementById('post-' + id)) await loadPosts('latest');
+            const el = document.getElementById('post-' + id);
+            if (!el) return showToast('Post not found', 'It may have been removed or is no longer in the feed.');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+            const c = document.getElementById('comments-' + id); if (c && openComments) c.style.display = 'block';
+        }
+
+        // ---- Phone notifications (the alert in the notification bar) ----
+        async function pushStatus() {
+            if (!pushSupported) return isIOS && !standalone ? 'ios' : 'none';
+            if (Notification.permission === 'denied') return 'denied';
+            if (Notification.permission !== 'granted') return 'off';
+            const reg = await swReady();
+            try { return reg && await reg.pushManager.getSubscription() ? 'on' : 'off'; } catch (e) { return 'off'; }
+        }
+        async function renderPushCard() {
+            const s = await pushStatus();
+            const sw = (k, label) => `<div class="tg"><span>${label}</span><label class="sw"><input type="checkbox" data-pref="${k}"${notePrefs[k] ? ' checked' : ''}><i></i></label></div>`;
+            const cards = {
+                off: `<h3>Get alerts on your phone</h3>Know right away when someone comments on your post, likes it, or drops something new.<br><button class="go" onclick="enablePush()">Turn on notifications</button>`,
+                on: `<h3>Notifications are on</h3>Choose what you want to hear about.${sw('comments', 'Comments and replies')}${sw('likes', 'Likes')}${sw('posts', 'New drops from everyone')}<button class="link" onclick="disablePush()">Turn off on this device</button>`,
+                denied: `<h3>Notifications are blocked</h3>Allow notifications for Zenith Chads in your phone or browser settings, then come back here.`,
+                ios: `<h3>Add to your Home Screen first</h3>On iPhone, alerts work once Zenith Chads is installed. Tap Share ⬆️, then Add to Home Screen, and open it from there.`,
+                none: ''
+            };
+            pushCard.innerHTML = cards[s]; pushCard.hidden = !cards[s];
+        }
+        pushCard.addEventListener('change', e => {
+            const k = e.target.dataset && e.target.dataset.pref; if (!k) return;
+            notePrefs[k] = e.target.checked;
+            fetch(`${BASE}/api/notifications/prefs`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...authH() }, body: JSON.stringify({ [k]: e.target.checked }) }).catch(() => {});
+        });
+
+        async function subscribePush(quiet) {
+            const reg = await swReady(); if (!reg) throw new Error('no worker');
+            const { key } = await (await fetch(`${BASE}/api/push/key`)).json();
+            if (!key) { if (!quiet) alert('Phone alerts are not switched on at the server yet.'); return; }
+            let sub = await reg.pushManager.getSubscription();
+            if (!sub) {
+                try { sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(key) }); }
+                catch (e) { const old = await reg.pushManager.getSubscription(); if (old) await old.unsubscribe(); sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(key) }); }
+            }
+            const r = await fetch(`${BASE}/api/push/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authH() }, body: JSON.stringify({ subscription: sub.toJSON() }) });
+            if (r.status === 401 && !quiet) openSignup();
+        }
+        async function enablePush() {
+            if (!hasToken()) return openSignup();
+            try {
+                const perm = await Notification.requestPermission();
+                if (perm === 'granted') { localStorage.removeItem('zc_push_off'); await subscribePush(false); }
+            } catch (e) { alert('Could not turn on notifications. Try again in a moment.'); }
+            renderPushCard();
+        }
+        async function disablePush() {
+            localStorage.setItem('zc_push_off', '1');
+            try { const reg = await swReady(), sub = reg && await reg.pushManager.getSubscription();
+                if (sub) { fetch(`${BASE}/api/push/unsubscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authH() }, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => {}); await sub.unsubscribe(); } } catch (e) {}
+            renderPushCard();
+        }
+        // On every open, keep the server's copy of this phone fresh (browsers rotate these quietly)
+        function syncPush() { if (pushSupported && Notification.permission === 'granted' && hasToken() && !localStorage.getItem('zc_push_off')) subscribePush(true).catch(() => {}); }
+
+        // Ask once, right after their first post or comment, when alerts make the most sense
+        function maybeAskPush() {
+            if (!pushSupported || localStorage.getItem('zc_push_asked') || Notification.permission !== 'default' || !bar.hidden) return;
+            localStorage.setItem('zc_push_asked', '1'); pushBar.hidden = false;
+        }
+        document.getElementById('pushOn').onclick = () => { pushBar.hidden = true; enablePush(); };
+        document.getElementById('pushX').onclick = () => { pushBar.hidden = true; };
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => {
+            const m = e.data || {};
+            if (m.type === 'push') {
+                if (typeof m.badge === 'number') setBadge(m.badge);
+                if (!m.shown && notePanel.hidden) showToast(m.title, m.body, () => goToPost(m.postId, m.kind !== 'post'));
+                if (m.kind === 'post' && window.scrollY < 200) loadPosts(currentSort);
+                loadNotes(true);
+            }
+            if (m.type === 'open-post') goToPost(m.postId, true);
+        });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) loadNotes(); });
+        notePoll = setInterval(() => { if (!document.hidden) loadNotes(); }, 60000);
+
+        startSession().then(() => { loadNotes(); syncPush(); });
+        loadPosts().then(() => {
+            const m = location.search.match(/[?&]post=([a-f0-9]{24})/i);
+            if (m) { goToPost(m[1], true); history.replaceState(null, '', location.pathname); }
+        });
     </script>
 </body>
 </html>

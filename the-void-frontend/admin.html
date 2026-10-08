@@ -1,104 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zenith Chads - ADMIN OVERRIDE</title>
-    <style>
-        body { background: #050000; color: #ff4444; font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { border-bottom: 2px solid #ff4444; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-        
-        .auth-box { background: #110000; border: 1px solid #ff4444; padding: 20px; margin-bottom: 20px; display: flex; gap: 10px; }
-        input[type="password"] { background: #000; border: 1px solid #ff4444; color: #fff; padding: 10px; flex: 1; outline: none; font-family: inherit; }
-        button { background: #ff4444; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-family: inherit; }
-        button:hover { background: #fff; }
-
-        .admin-post { background: #110000; border: 1px solid #330000; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .admin-meta { font-size: 12px; color: #888; margin-bottom: 10px; display: flex; gap: 15px; }
-        .ip-badge { background: #ff4444; color: #000; padding: 2px 6px; font-weight: bold; border-radius: 3px; }
-        .content { color: #ccc; margin-bottom: 10px; word-wrap: break-word; }
-        img, video { max-width: 200px; border: 1px solid #330000; }
-        
-        .btn-delete { background: transparent; border: 1px solid #ff4444; color: #ff4444; }
-        .btn-delete:hover { background: #ff4444; color: #000; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Admin Override Panel</h1>
-        
-        <div class="auth-box">
-            <input type="password" id="adminSecret" placeholder="Enter Admin Secret...">
-            <button onclick="loadAdminFeed()">Authorize</button>
-        </div>
-
-        <div id="adminFeed"></div>
-    </div>
-
-    <script>
-        const API_URL = 'https://zenith-chad-backend.onrender.com/api/admin/posts';
-        let secretToken = '';
-
-        async function loadAdminFeed() {
-            secretToken = document.getElementById('adminSecret').value;
-            if (!secretToken) return alert("Enter password.");
-
-            try {
-                const res = await fetch(API_URL, {
-                    headers: { 'x-admin-token': secretToken }
-                });
-                
-                if (res.status === 403) return alert("ACCESS DENIED. Invalid password.");
-                
-                const posts = await res.json();
-                const feed = document.getElementById('adminFeed');
-                feed.innerHTML = `<h3 style="color: #fff;">System Authorized. ${posts.length} entries found.</h3>`;
-
-                posts.forEach(post => {
-                    const postEl = document.createElement('div');
-                    postEl.className = 'admin-post';
-                    
-                    let mediaHtml = '';
-                    if (post.mediaUrl) {
-                        const url = post.mediaUrl.startsWith('http') ? post.mediaUrl : `https://zenith-chad-backend.onrender.com${post.mediaUrl}`;
-                        if (post.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) mediaHtml = `<img src="${url}">`;
-                        else if (post.mediaUrl.match(/\.(mp4|webm)$/i)) mediaHtml = `<video controls src="${url}"></video>`;
-                    }
-
-                    postEl.innerHTML = `
-                        <div style="flex: 1; padding-right: 20px;">
-                            <div class="admin-meta">
-                                <span>ID: ${post._id}</span>
-                                <span class="ip-badge">IP: ${post.ipAddress || 'Unknown'}</span>
-                                <span>Likes: ${post.likes}</span>
-                            </div>
-                            <div class="content">${post.content}</div>
-                            ${mediaHtml}
-                        </div>
-                        <button class="btn-delete" onclick="deletePost('${post._id}')">DELETE POST</button>
-                    `;
-                    feed.appendChild(postEl);
-                });
-            } catch (err) { alert("Server error."); }
-        }
-
-        async function deletePost(id) {
-            if (!confirm("Permanently delete this post?")) return;
-
-            try {
-                const res = await fetch(`${API_URL}/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'x-admin-token': secretToken }
-                });
-                
-                if (res.ok) {
-                    loadAdminFeed(); // Reload list after deletion
-                } else {
-                    alert("Failed to delete.");
-                }
-            } catch (err) { alert("Error deleting post."); }
-        }
-    </script>
-</body>
-</html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src https:; media-src https:; connect-src https://zenith-chad-backend.onrender.com; base-uri 'none'; form-action 'none'">
+<title>Admin</title>
+<style>
+body{background:#050000;color:#ff6666;font-family:'Courier New',monospace;margin:0;padding:16px}
+.wrap{max-width:860px;margin:0 auto}h1{border-bottom:2px solid #ff4444;padding-bottom:8px;letter-spacing:2px;text-transform:uppercase;font-size:20px}
+.row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+input{background:#000;border:1px solid #ff4444;color:#fff;padding:10px;flex:1;min-width:160px;font-family:inherit;font-size:16px}
+button{background:#ff4444;color:#000;border:0;padding:10px 14px;font-weight:bold;cursor:pointer;font-family:inherit}
+button.g{background:transparent;border:1px solid #ff4444;color:#ff4444}
+.p{background:#110000;border:1px solid #330000;padding:12px;margin-bottom:12px;overflow-wrap:anywhere}
+.m{font-size:12px;color:#aaa;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}.real{color:#fff;background:#550000;padding:1px 6px}
+.ip{background:#ff4444;color:#000;padding:1px 6px;font-weight:bold}.c{border-left:2px solid #550000;margin:6px 0 0 8px;padding-left:8px;font-size:13px;color:#ccc}
+img,video{max-width:200px;display:block;margin:6px 0}.note{color:#999;font-size:12px}
+</style></head>
+<body><div class="wrap">
+<h1>Admin Panel</h1>
+<div class="row"><input type="password" id="sec" placeholder="Admin secret" autocomplete="off"><button id="go">Authorize</button></div>
+<div class="row"><input id="who" placeholder="Look up a username"><button id="find" class="g">Who is this?</button><button id="more" class="g">All posts</button><button id="ids" class="g">All identities</button></div>
+<div id="out"></div>
+</div>
+<script>
+const API = 'https://zenith-chad-backend.onrender.com/api/admin';
+let secret = '';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const when = d => new Date(d).toLocaleString();
+async function call(path, method = 'GET', body) {
+  const r = await fetch(API + path, { method, headers: { 'x-admin-token': secret, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Failed');
+  return d;
+}
+function post(p) {
+  const media = p.mediaUrl && /^https:\/\//.test(p.mediaUrl) ? (p.mediaType === 'video' ? `<video controls playsinline src="${esc(p.mediaUrl)}"></video>` : p.mediaType === 'audio' ? '' : `<img src="${esc(p.mediaUrl)}">`) : '';
+  const com = (p.comments || []).map(c => `<div class="c"><b>${esc(c.nickname)}</b> <span class="real">real: ${esc(c.realNickname)}</span> <span class="ip">${esc(c.ipAddress)}</span><br>${esc(c.text)}<br><span class="note">${esc(c.ua)}</span></div>`).join('');
+  return `<div class="p" data-id="${esc(p._id)}"><div class="m"><span>${when(p.createdAt)}</span><span>shown as: ${esc(p.nickname)}</span><span class="real">real: ${esc(p.realNickname || 'unknown')}</span><span class="ip">IP ${esc(p.ipAddress)}</span><span>likes ${p.likes}</span>${p.isPinned ? '<span>📌</span>' : ''}</div>
+  <div class="note">device: ${esc(p.deviceId)} | ${esc(p.ua)}</div><div style="color:#ddd;margin:8px 0;white-space:pre-wrap">${esc(p.content)}</div>${media}${com}
+  <div class="row" style="margin-top:10px"><button class="g" data-a="del">Delete</button><button class="g" data-a="pin">Pin</button><button class="g" data-a="ban" data-n="${esc(p.realNickname)}">Ban user</button></div></div>`;
+}
+const dev = i => `<div class="p"><div class="m"><span class="real">${esc(i.username)}</span><span class="ip">IP ${esc(i.ip)}</span><span>${esc(i.device)}</span><span>${esc(i.deviceId)}</span><span>seen ${i.seen}x</span></div><div class="note">first ${when(i.firstSeen)} | last ${when(i.lastSeen)}<br>${esc(i.ua)}</div></div>`;
+async function showIds() { try { const d = await call('/identities'); $('out').innerHTML = `<p>${d.length} identity records (newest activity first)</p>` + d.map(dev).join(''); } catch (e) { alert(e.message); } }
+async function show(path) {
+  try { const d = await call(path); const posts = Array.isArray(d) ? d : d.posts; let head = '';
+    if (d.user) head = `<div class="p"><b>${esc(d.user.nickname)}</b> ${d.user.isBanned ? '(BANNED)' : ''}<div class="m"><span>joined ${when(d.user.createdAt)}</span><span class="ip">signup IP ${esc(d.user.signupIp)}</span><span>${esc(d.user.signupUa)}</span><span>${esc(d.user.deviceId)}</span></div>
+      <div class="note">Recent admin actions: ${d.audit.map(a => esc(a.action + ' ' + a.target)).join(' | ')}</div></div>`;
+    $('out').innerHTML = head + (d.devices ? `<p>${d.devices.length} devices / networks used by this user</p>` + d.devices.map(dev).join('') : '') + `<p>${posts.length} entries</p>` + posts.map(post).join('');
+  } catch (e) { alert(e.message); }
+}
+$('go').onclick = () => { secret = $('sec').value; if (secret) show('/posts'); };
+$('more').onclick = () => show('/posts');
+$('ids').onclick = showIds;
+$('find').onclick = () => { const n = $('who').value.trim(); if (n) show('/lookup?nickname=' + encodeURIComponent(n)); };
+$('out').onclick = async e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const id = b.closest('.p').dataset.id, a = b.dataset.a;
+  try {
+    if (a === 'del' && confirm('Delete this post for good?')) await call('/posts/' + id, 'DELETE');
+    else if (a === 'pin') await call('/posts/' + id + '/pin', 'PUT');
+    else if (a === 'ban' && confirm('Ban ' + b.dataset.n + '?')) await call('/users/ban', 'POST', { nickname: b.dataset.n, banned: true });
+    else return;
+    show('/posts');
+  } catch (er) { alert(er.message); }
+};
+</script></body></html>
